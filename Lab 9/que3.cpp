@@ -36,58 +36,71 @@
 
 #include <bits/stdc++.h>
 using namespace std;
-typedef pair<int, int> pii;
+typedef pair<int,int> pii;
 
-class Solution
-{
-    set<pii> Edges;
+class Solution{
+    set<pii> Edges; // normalized undirected edges (first <= second)
     int n;
+    int m; // number of undirected edges
 
 public:
-    Solution(int numVertices, set<pii> &E)
-    {
-        // Constructor initialises the graph
 
+    Solution(int numVertices, set<pii>& E){
+        // Constructor initialises the graph
         n = numVertices;
         Edges = E;
+        m = (int)Edges.size();
     }
 
-    bool isValidEdge(pii e); // Checks if an edge exists in the graph
+    bool isValidEdge(pii e){
+        if(e.first > e.second) swap(e.first, e.second);
+        return Edges.find(e) != Edges.end();
+    } // Checks if an edge exists in the graph
 
-    bool verifyEuleriancycle(vector<int> &seq)
-    {
+    bool verifyEuleriancycle(vector<int>& seq){
+        // Check trivial conditions
+        if(seq.size() < 2) return false;
+        if(seq.front() != seq.back()) return false;
 
-        // Write your code here. Feel free to use the isValidEdge helper
+        // For an Eulerian cycle in an undirected graph with m edges,
+        // sequence should traverse exactly m edges => seq.size() == m+1
+        if((int)seq.size() != m + 1) return false;
+
+        map<pii,int> used;
+        for(size_t i = 0; i + 1 < seq.size(); ++i){
+            int a = seq[i], b = seq[i+1];
+            pii key = {min(a,b), max(a,b)};
+            if(!isValidEdge(key)) return false;
+            used[key]++;
+            if(used[key] > 1) return false; // edge used more than once
+        }
+
+        // All undirected edges must be used exactly once
+        if((int)used.size() != m) return false;
+        return true;
     }
 };
 
-int main()
-{
+int main(){
 
-    int n, m;
-    cin >> n >> m;
+    int n,m; cin >> n >> m;
     set<pii> E;
 
-    while (m--)
-    {
-        int u, v;
-        cin >> u >> v;
-        E.insert({u, v});
-        E.insert({v, u});
+    // store undirected edges normalized once
+    int mu = m;
+    while(mu--){
+        int u,v; cin >> u >> v;
+        if(u > v) swap(u,v);
+        E.insert({u,v});
     }
 
-    int tt;
-    cin >> tt;
+    int tt; cin >> tt;
 
-    while (tt--)
-    {
-        int w;
-        cin >> w;
-        vector<int> seq(w, 0);
-        for (int i = 0; i < w; i++)
-            cin >> seq[i];
+    while(tt--){
+        int w; cin >> w;
+        vector<int> seq(w,0); for(int i=0;i<w;i++) cin >> seq[i];
 
-        Solution sol(n, E);
+        Solution sol(n,E);
         bool ans = sol.verifyEuleriancycle(seq);
         cout << (ans ? "YES" : "NO") << "\n";
     }
